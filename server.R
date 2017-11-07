@@ -3,7 +3,7 @@ library(shiny)
 library(ggplot2)
 library(psych)
 
-  
+ggplotRegression <- function (fit) {
   require(ggplot2)
 
   ggplot(fit$model, aes_string(x = names(fit$model)[2], y = names(fit$model)[1])) + 
@@ -13,7 +13,7 @@ library(psych)
                        "Intercept =",signif(fit$coef[[1]],5 ),
                        " Slope =",signif(fit$coef[[2]], 5),
                        " P =",signif(summary(fit)$coef[2,4], 5)))
-
+}
 
   
 shinyServer(function(input,output) {
