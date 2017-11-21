@@ -95,3 +95,92 @@ head(df)
 
 prec_avg[7]
 plot(prec_avg[4:9])
+
+
+
+
+#####################################################
+#21.11.2017
+
+a <- sqrt(9)
+if(a*a != 9)
+{print("R is great!")}
+
+j<-0
+while (j<1)
+{print(j);j<-j+0.1}
+
+#####################
+
+anika <- function(x,y){
+  z<-x+y
+  return(z)
+}
+anika(10,3)
+
+#####################
+
+ndvi <- function()
+  
+  
+####################
+
+band_1<-raster("/home/fpohl/Dokumente/Sentinel-2/Sentinel_2_20160512.tif",band=1)
+band_2<-raster("/home/fpohl/Dokumente/Sentinel-2/Sentinel_2_20160512.tif",band=2)
+
+allbands<-stack(band_1,band_2)  
+allbands<-brick("/home/fpohl/Dokumente/Sentinel-2/Sentinel_2_20160512.tif")  
+
+img <- brick("/home/fpohl/Dokumente/Sentinel-2/Sentinel_2_20160512.tif")
+img
+plot(img)
+
+plotRGB(allbands,4,3,2,stretch="lin")
+ggRGB(allbands,4,3,2,stretch="lin")
+
+#export raster . overwrite if already existent
+writeRaster(img,datatype="FLT4S",filename="new_data.tif",format="GTiff",overwrite=TRUE)
+
+#export a picture to GoogleEarth
+KML(img,"/home/fpohl/Dokumente/Sentinel-2/Sentinel_2_20160512.tif",col=rainbow(255),maxpixel=100000)
+
+plot(band_2)
+ext <- drawExtent()
+
+raster_sd<-calc(img,fun=sd)
+fun <- function(x) {x/10}
+raster_output <- calc(img,fun)
+fun <- function(x) {x[is.na(x)] <- -999; return(x)}
+raster_output <- calc(img,fun)
+
+#regression analysis
+#raster1 and raster2 have 5 layers,coeffiecients[2] is the slope
+raster12 <- stack(raster_1,raster_2)
+fun <- function(x) {lm(x[1:5] ~ x[6:10])$coefficients[2]}
+raster_output <- calc(raster12,fun)
+
+#write your permanent results directly to disk when calculating them
+calc(img,fun=sd,filename="img_sd.grd")
+
+
+#NDVI CALCULATION
+
+lsat <- brick("/home/fpohl/Dokumente/Sentinel-2/Sentinel_2_20160512.tif")
+ndvi <- (lsat[[4]]-lsat[[3]])/(lsat[[4]]+lsat[[3]])
+plot(ndvi)
+
+ndvi <- calc(lsat,fun=function(x){(x[,4]-x[,3])/(x[,4]+x[,3])})
+plot(ndvi)
+
+band_4 <- raster("/home/fpohl/Dokumente/Sentinel-2/Sentinel_2_20160512.tif",band=4)
+band_3 <- raster("/home/fpohl/Dokumente/Sentinel-2/Sentinel_2_20160512.tif",band=3)
+
+func_msavi <- function(nir,red){
+  (2*nir+1-sqrt((2*nir+1)^2-8*(nir-red)))/2
+  }
+
+msavi <- overlay(band_4,band_3,fun=func_msavi)
+plot(msavi)
+
+#spectralIndices from RStoolbox
+ndvi <- spectralIndices(lsat,red="B3_dn",nir="B4_dn",indices="NDVI")
